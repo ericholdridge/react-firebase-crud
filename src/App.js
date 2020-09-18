@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Contacts from "./components/Contacts";
 import Heading from "./components/Heading";
@@ -13,33 +13,51 @@ function App() {
   };
 
   const [values, setValues] = useState(initialFormValues);
+  const [contactObjects, setContactObjects] = useState({});
 
   // Get the users input values
   const handleInputChange = (e) => {
-    var {name, value} = e.target
+    var { name, value } = e.target;
     setValues({
       ...values,
-      [name]: value
-    })
+      [name]: value,
+    });
   };
 
   // Prevent the form from refreshing
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    addOrEdit(values)
-  }
+    addOrEdit(values);
+  };
 
   const addOrEdit = (obj) => {
-    firebaseDB.child("contacts").push(
-      obj
-    )
-    console.log(obj)
-  }
+    firebaseDB.child("contacts").push(obj, (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+    console.log(obj);
+  };
+
+  useEffect(() => {
+    firebaseDB.child("contacts").on("value", (snapshot) => {
+      if (snapshot.val() != null)
+        setContactObjects({
+          ...snapshot.val(),
+        });
+    });
+  }, []);
 
   return (
     <div className="App">
       <Heading />
-      <Contacts values={values} handleInputChange={handleInputChange} handleFormSubmit={handleFormSubmit} addOrEdit={addOrEdit}/>
+      <Contacts
+        values={values}
+        handleInputChange={handleInputChange}
+        handleFormSubmit={handleFormSubmit}
+        addOrEdit={addOrEdit}
+        contactObjects={contactObjects}
+      />
     </div>
   );
 }
